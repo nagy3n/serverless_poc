@@ -25,7 +25,9 @@
         }),
         methods: {
             submitScript(){
-                HTTP.post('/upload/',)
+                let formData = new FormData();
+                formData.append("script", this.scriptFile);
+                HTTP.post('/upload/', formData).then(() => this.$router.push({name: "list-scripts"}))
             }
         }
     }
