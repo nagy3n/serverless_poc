@@ -4,8 +4,11 @@ from os.path import isfile, join
 import json
 import importlib
 import traceback
+from flask_cors import CORS, cross_origin
 
 app = Flask(__name__)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 ALLOWED_EXTENSIONS = {'py'}
 
 
@@ -15,12 +18,14 @@ def allowed_file(filename):
 
 
 @app.route('/', methods=['GET'])
+@cross_origin()
 def scripts_list():
     scripts = [f for f in listdir('scripts') if isfile(join('scripts', f))]
     return json.dumps(scripts)
 
 
 @app.route('/upload/', methods=['POST'])
+@cross_origin()
 def upload_script():
     # validating script file
     try:
@@ -28,7 +33,7 @@ def upload_script():
     except KeyError:
         return 'No script file attached', 400
 
-    if allowed_file(script_request_file.filename):
+    if not allowed_file(script_request_file.filename):
         return 'File extension must be .py', 400
 
     # checking if there's no syntax errors/wrong format
@@ -57,6 +62,7 @@ def upload_script():
 
 
 @app.route('/get_script_arguments/<script_name>', methods=['GET'])
+@cross_origin()
 def get_script_arguments(script_name):
     # validating
     if not isfile(join('./scripts', script_name)):
@@ -75,12 +81,13 @@ def get_script_arguments(script_name):
 
 
 @app.route('/run_script/<script_name>', methods=['POST'])
-def scripts_list(script_name):
+@cross_origin()
+def run_script(script_name):
     # validating
     if not isfile(join('./scripts', script_name)):
         return 'Script does not exist', 400
     try:
-        arguments = request.json['arguments']
+        arguments = request.json
     except KeyError:
         return 'No attached arguments', 400
 
@@ -97,13 +104,15 @@ def scripts_list(script_name):
 
 
 @app.route('/delete_script/<script_name>', methods=['DELETE'])
-def scripts_list(script_name):
+@cross_origin()
+def delete_script(script_name):
     script_path = join('./scripts', script_name)
     if not isfile(script_path):
-        remove(script_path)
-        return 'Script removed successfully', 204
+        return 'Script does not exist', 400
 
-    return 'Script does not exist', 400
+    remove(script_path)
+    return 'Script removed successfully', 204
+
 
 
 if __name__ == '__main__':

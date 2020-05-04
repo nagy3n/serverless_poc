@@ -1,0 +1,33 @@
+version: '3.7'
+
+services:
+  serverless_backend:
+    container_name: serverless_backend
+    build: .
+    command: bash -c "flask run --host=0.0.0.0"
+    volumes:
+      - type: bind
+        source: .
+        target: /usr/src/app/
+    ports:
+      - 5000:5000
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+
+  serverless_frontend:
+    container_name: serverless_frontend
+    build: ./serverless_poc_frontend
+    command: npm run serve
+    ports:
+      - 40080:8080
+    volumes:
+      - type: bind
+        source: ./serverless_poc_frontend
+        target: /usr/src/app/
+      - type: volume
+        source: serverless_poc_node_modules
+        target: /usr/src/app/node_modules
+
+volumes:
+  serverless_poc_node_modules:
